@@ -9,7 +9,7 @@ from GribFile import GribFile
 import time
 import gdas_interp as g
 
-IN_FILE = 'data/gdas1.PGrbF00.130901.06z'
+IN_FILE = 'data/gdas1.PGrbF00.060828.18z'
 #VAR_NAME = 'Temperature'
 VAR_NAME = 'Relative humidity'
 EPSILON = 0.00000001
