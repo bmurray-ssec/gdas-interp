@@ -940,36 +940,9 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
     # remove tmpDir when done
     shutil.rmtree(tmpDir)
 
-    #print outFp
+    outFp = outFp.T.reshape((len(retProf), nLats, nLons))
     # TODO: might not need to return coordGrid. Just added this for data validation purposes
     return coordGrid, outFp
-
-    col = 0
-    for lat in xrange(gridSize[0]):
-        for lon in xrange(gridSize[1]):
-            t = time.time()
-            tempData = tempProf[lat * nLats + lon]
-            #tempData = [ tempProf[i][lat][lon] for i in xrange(len(tempProf)) ]
-            tempCol = (tempPres, tempData)
-
-            rhCol = None
-            if rhProf is not None:
-                rhData = rhProf[lat * nLats + lon]
-                #rhData = [ rhProf[i][lat][lon] for i in xrange(len(rhProf)) ]
-                rhCol = (rhPres, rhData)
-
-            column = vert_interp(varName, coordGrid[lat][lon][0], coordGrid[lat][lon][1], 
-                                 pressure, None, tempCol, rhCol)
-
-            #column = [ (0, 0) for i in range(len(retProf)) ]
-
-            for i in xrange(len(column)):
-                retProf[i][1][lat][lon] = column[i][1]
-
-            print 'prof col %5d: %1.7f' % (col, time.time() - t) 
-            col += 1
-
-    return retProf
 
 
 

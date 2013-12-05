@@ -26,15 +26,14 @@ def main():
     #interp = g.vert_interp_grid(VAR_NAME, filename='data/gdas1.PGrbF00.130901.06z')
     coordGrid, profGrid = g.vert_interp_grid(VAR_NAME, filename=IN_FILE)
 
-    '''
-    #nLats = len(coordGrid)
+    nLats = len(coordGrid)
     nLons = len(coordGrid[0])
 
-    for i in range(len(profGrid)):
+    for i in range(nLats * nLons):
         lat, lon = divmod(i, nLons)
 
         col = g.vert_interp(VAR_NAME, coordGrid[lat, lon, 0], coordGrid[lat, lon, 1], filename=IN_FILE)
-        gridCol = profGrid[i]
+        gridCol = [ profGrid[j][lat][lon] for j in range(len(profGrid)) ]
 
         for j in xrange(len(col)):
             col[j] = col[j][1]
@@ -66,7 +65,6 @@ def main():
 
     #print len(incProfGrid), len(coordGrid)
     #print len(incProfGrid[0]), len(coordGrid[0])
-    '''
 
 
 if __name__ == '__main__':
