@@ -11,6 +11,7 @@ import numpy as np
 import sys
 
 IN_FILE = 'data/gdas1.PGrbF00.060828.18z'
+TEST_FILE = 'test_profile.in'
 VAR_NAME = 'Temperature'
 
 _pressure_levels = \
@@ -34,7 +35,7 @@ _pressure_levels = \
 
 def get_temp_vector():
     retList = []
-    fd = open('test.in', 'r')
+    fd = open(TEST_FILE, 'r')
     lines = fd.readlines()
     for line in lines:
         line = line.strip()
@@ -53,7 +54,7 @@ def get_temp_vector():
 
 def get_rel_hum_vector():
     retList = []
-    fd = open('test.in', 'r')
+    fd = open(TEST_FILE, 'r')
     lines = fd.readlines()
     for line in lines:
         line = line.strip()

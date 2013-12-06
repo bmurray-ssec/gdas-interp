@@ -143,7 +143,11 @@ class GribFile(File):
         coordGrid = np.ndarray((numLats, numLons, 2))
         for lat in range(len(lats)):
             for lon in range(len(lons[lat])):
-                coordGrid[lat, lon, 0] = lats[lat][lon]
+                # NOTE: lats index is 'len(lats) - 1 - lat' (rather than just 'lat')
+                # to deal with the bug in pygrib 1.9.6 which causes latitude order
+                # to be flipped. Change if using a more recent version of pygrib
+                coordGrid[lat, lon, 0] = lats[len(lats) - 1 - lat][lon]
+                #coordGrid[lat, lon, 0] = lats[lat][lon]
                 coordGrid[lat, lon, 1] = lons[lat][lon]
 
         return coordGrid

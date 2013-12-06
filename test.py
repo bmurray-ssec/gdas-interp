@@ -8,19 +8,13 @@ Script used to test our interpolation code
 from GribFile import GribFile
 import time
 import gdas_interp as g
-import sys
 
 IN_FILE = 'data/gdas1.PGrbF00.060828.18z'
-VAR_NAME = 'Temperature'
-#VAR_NAME = 'Relative humidity'
+#VAR_NAME = 'Temperature'
+VAR_NAME = 'Relative humidity'
 EPSILON = 0.00000001
 
 def main():
-    global IN_FILE
-
-    if len(sys.argv) == 2:
-        IN_FILE = sys.argv[1]
-
     print 'For input file: %s' % IN_FILE
     print 'Measuring: %s' % VAR_NAME
     
@@ -32,7 +26,6 @@ def main():
     #interp = g.vert_interp_grid(VAR_NAME, filename='data/gdas1.PGrbF00.130901.06z')
     coordGrid, profGrid = g.vert_interp_grid(VAR_NAME, filename=IN_FILE)
 
-    '''
     nLats = len(coordGrid)
     nLons = len(coordGrid[0])
 
@@ -72,7 +65,6 @@ def main():
 
     #print len(incProfGrid), len(coordGrid)
     #print len(incProfGrid[0]), len(coordGrid[0])
-    '''
 
 
 if __name__ == '__main__':
