@@ -615,12 +615,14 @@ def _make_ret_prof(pressure, grid=False, gridSize=None):
             # if our profile is a grid, make the output columns a grid of size (nLat, nLons)
             for i in xrange(len(retProf)):
                 retProf[i][1] = np.ndarray((gridSize[0], gridSize[1]))
+
     elif type(pressure) == int or type(pressure) == float or type(pressure) == np.float64:
         # if the pressure is a single number, convert it to a list for processing
         retProf.append([pressure, -1])
         if grid:
             for i in xrange(len(retProf)):
                 retProf[i][1] = np.ndarray((gridSize[0], gridSize[1]))
+
     elif type(pressure) == list or type(pressure) == np.ndarray:
         # if the pressure was given as a list, copy it into our return 
         # profile for processing
@@ -852,9 +854,13 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
     coordGrid = inputDict['coordGrid']
     tempPres = inputDict['tempPres']
     rhPres = inputDict['rhPres']
-    outPres = pressure
     tempProf = inputDict['tempProf']
     rhProf = inputDict['rhProf']
+
+    if pressure is None:
+        outPres = [ _101_pressure_levels[i] for i in xrange(len(_101_pressure_levels)) ]
+    else:
+        outPres = pressure
 
     nLats = len(coordGrid)
     nLons = len(coordGrid[0])
@@ -872,7 +878,7 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
 
     # TODO: Might not need to make a return profile (we can just get the length of outPres)
     # - Our return profile is just outFp
-    retProf = _make_ret_prof(pressure, True, gridSize)
+    retProf = _make_ret_prof(outPres, True, gridSize)
 
     # Can now memmap our input and output profiles
     tmpDir = mkdtemp()
@@ -932,7 +938,8 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
     outFp = outFp.T.reshape((len(retProf), nLats, nLons))
 
     # TODO: might not need to return coordGrid. Just added this for data validation purposes
-    return coordGrid, outFp
+    # Return (lat x lon) coord grid, (pres) pressure column, and (pres x lat x lon) data grid
+    return coordGrid, outPres, outFp
 
 
 

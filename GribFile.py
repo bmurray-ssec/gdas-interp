@@ -70,7 +70,6 @@ class GribFile(File):
             presVec[i] = retList[i][0]
             dataVec[i] = retList[i][1]
 
-
         return presVec, dataVec
 
 
@@ -166,7 +165,7 @@ class GribFile(File):
         # make sure the index is an integer
         latIndex = int(round((lat - lats.min()) / latIncr))
         lonIndex = int(round((lon - lons.min()) / lonIncr))
-        
+
         return (latIndex, lonIndex)
 
 

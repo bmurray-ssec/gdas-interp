@@ -9,8 +9,7 @@ from GribFile import GribFile
 import gdas_interp as g
 import numpy as np
 import matplotlib.pyplot as plt
-import pylab
-import sys
+import sys, os
 
 IN_FILE = 'data/gdas1.PGrbF00.060828.18z'
 TEST_FILE = 'test_profile.in'
@@ -82,8 +81,10 @@ def main():
     pressure = None
     if len(sys.argv) == 2:
         IN_FILE = sys.argv[1]    
+        #pressure = float(sys.argv[1])
     elif len(sys.argv) == 3:
-        pressure = float(sys.argv[2])
+        IN_FILE = sys.argv[1]    
+        inFile2 = sys.argv[2]
 
 
     tempProf = get_temp_vector()
@@ -91,23 +92,44 @@ def main():
 
     #lat = 19.949
     #lon = -62.717
-    lat = 0
-    lon = 0
+    lat = 43.0667
+    lon = -89.4000
 
     #output = g.vert_interp(VAR_NAME, lat, lon, pressure, tempProf=tempProf, rhProf=rhProf)
 
     output = g.vert_interp(VAR_NAME, lat, lon, pressure, IN_FILE)
     x = []
     y = []
-
+    #print
     for o in output:
-        print '%10.4f : %7.4f' % (o[0], o[1])
         x.append(o[0])
         y.append(o[1])
+        #print '%9.4f : %7.4f' % (o[0], o[1])
+    #print
 
-    if len(x) > 1:
-        plt.plot(x, y, 'b')     
-        plt.show()
+    output = g.vert_interp(VAR_NAME, lat, lon, pressure, inFile2)
+    u = []
+    v = []
+    #print
+    for o in output:
+        u.append(o[0])
+        v.append(o[1])
+        #print '%9.4f : %7.4f' % (o[0], o[1])
+    #print
+
+    diff = []
+    for i in range(len(x)):
+        diff.append(y[i] - v[i])
+
+    p1, = plt.plot(x,    y, 'b')
+    p2, = plt.plot(u,    v, 'r')
+    diff, = plt.plot(x, diff, 'g')
+    plt.plot(x, [0] * len(x), 'k--')
+    plt.legend([p1, p2, diff], [os.path.basename(IN_FILE), os.path.basename(inFile2), 'diff'], loc=7)
+    plt.title('For (lat, lon) = (%f, %f)' % (lat, lon))
+    plt.ylabel(VAR_NAME)
+    plt.xlabel('Pressure')
+    plt.show()
 
 
 if __name__ == '__main__':

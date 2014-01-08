@@ -5,21 +5,25 @@ Script used to test our interpolation code
 @author: bmurray
 '''
 
-from GribFile import GribFile
-import time
+import os.path
+import time, sys
 import gdas_interp as g
-import sys
+import matplotlib.pyplot as plt
+from GribFile import GribFile
 
 IN_FILE = 'data/gdas1.PGrbF00.060828.18z'
-VAR_NAME = 'Temperature'
-#VAR_NAME = 'Relative humidity'
+#VAR_NAME = 'Temperature'
+VAR_NAME = 'Relative humidity'
 EPSILON = 0.00000001
 
 def main():
     global IN_FILE
+    levIdx = 90
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) >= 2:
         IN_FILE = sys.argv[1]
+    if len(sys.argv) >= 3:
+        levIdx = int(sys.argv[2])
 
     print 'For input file: %s' % IN_FILE
     print 'Measuring: %s' % VAR_NAME
@@ -30,7 +34,12 @@ def main():
 
     print 'getting grid data'
     #interp = g.vert_interp_grid(VAR_NAME, filename='data/gdas1.PGrbF00.130901.06z')
-    coordGrid, profGrid = g.vert_interp_grid(VAR_NAME, filename=IN_FILE)
+    coordGrid, presLevels, profGrid = g.vert_interp_grid(VAR_NAME, filename=IN_FILE)
+
+    plt.imshow(profGrid[levIdx])
+    plt.title('"%s"\n %s at pressure %f' % \
+            (os.path.basename(IN_FILE), VAR_NAME, presLevels[levIdx]))
+    plt.show()
 
     '''
     nLats = len(coordGrid)
