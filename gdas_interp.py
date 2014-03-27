@@ -413,7 +413,7 @@ def _vert_interp_low_pressure(vertProf, presVec, pressure, lat):
 
     # if we haven't already cached the medium pressure levels, cache them
     if not med_cached:
-        # first, calculate values 35 through 85 of the 101-level profile
+        # calculate values at indices from lx of the 101-level profile
         for i in xrange(len(lx)):
             _101_pressure_values[lx[i]] = _vert_interp_med_pressure(vertProf, presVec, _101_pressure_levels[lx[i]])
 
@@ -615,12 +615,14 @@ def _make_ret_prof(pressure, grid=False, gridSize=None):
             # if our profile is a grid, make the output columns a grid of size (nLat, nLons)
             for i in xrange(len(retProf)):
                 retProf[i][1] = np.ndarray((gridSize[0], gridSize[1]))
+
     elif type(pressure) == int or type(pressure) == float or type(pressure) == np.float64:
         # if the pressure is a single number, convert it to a list for processing
         retProf.append([pressure, -1])
         if grid:
             for i in xrange(len(retProf)):
                 retProf[i][1] = np.ndarray((gridSize[0], gridSize[1]))
+
     elif type(pressure) == list or type(pressure) == np.ndarray:
         # if the pressure was given as a list, copy it into our return 
         # profile for processing
@@ -775,7 +777,8 @@ def vert_interp_ozone(filename, lat, lon, month):
 
     return retProf
 
-def _process_columns(varName, tempFn, rhFn, outFn, tempRecSz, rhRecSz, outRecSz, offset, nLats, nLons, nRecs):
+def _process_columns(varName, tempFn, rhFn, outFn, tempRecSz, rhRecSz, \
+                     outRecSz, offset, nLats, nLons, nRecs):
     global tempPres
     global rhPres
     global outPres
@@ -851,20 +854,21 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
     coordGrid = inputDict['coordGrid']
     tempPres = inputDict['tempPres']
     rhPres = inputDict['rhPres']
-    outPres = pressure
     tempProf = inputDict['tempProf']
     rhProf = inputDict['rhProf']
+
+    if pressure is None:
+        outPres = [ _101_pressure_levels[i] for i in xrange(len(_101_pressure_levels)) ]
+    else:
+        outPres = pressure
 
     nLats = len(coordGrid)
     nLons = len(coordGrid[0])
 
+    # reshape our input profiles to make them easier to process
     tempProf = tempProf.reshape((len(tempProf), nLats * nLons)).T
-    #tempProf = tempProf.reshape((len(tempProf), len(tempProf[0]) * len(tempProf[0][0]))).T
     if rhProf is not None:
         rhProf   = rhProf.reshape((len(rhProf), nLats * nLons)).T
-        #rhProf   = rhProf.reshape((len(rhProf), len(rhProf[0]) * len(rhProf[0][0]))).T
-    #print tempPres.shape, tempProf.shape
-    #return
 
     # temp prof should always have something in it now
     if tempProf is None:
@@ -874,10 +878,9 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
 
     # TODO: Might not need to make a return profile (we can just get the length of outPres)
     # - Our return profile is just outFp
-    retProf = _make_ret_prof(pressure, True, gridSize)
+    retProf = _make_ret_prof(outPres, True, gridSize)
 
     # Can now memmap our input and output profiles
-    # TODO: remember to delete tmpDir when done
     tmpDir = mkdtemp()
 
     tempFile = os.path.join(tmpDir, 'temp_file.dat')
@@ -897,8 +900,7 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
     del outFp
 
     columnsPerProc = ((nLats * nLons) // NUM_PROCS) + 1
-    #print columnsPerProc
-    #return
+
     # process columns in parallel
     procList = []
     if rhProf is None:
@@ -921,28 +923,23 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
             procList.append(p)
             p.start()
 
-    #if rhProf is None:
-        #_process_columns(varName, tempFile, rhFile, outFile, len(tempProf[0]), None, len(retProf), 0, nLats, nLons, 10)
-    #else:
-        #_process_columns(varName, tempFile, rhFile, outFile, len(tempProf[0]), len(rhProf[0]), len(retProf), 0, nLats, nLons, 5)
-
     # wait for running child processes to complete
     for p in procList:
         p.join()
         if p.is_alive():
             print 'Error: process %d should be dead here' % p.pid
 
+    # get the output profile from our mem-mapped file
     outFp = np.memmap(outFile, dtype='float64', mode='r', shape=(nLats * nLons, len(retProf)))
-
-    #outFp = outFp.T
-    #outFp = outFp.reshape((len(retProf), nLats, nLons))
 
     # remove tmpDir when done
     shutil.rmtree(tmpDir)
 
     outFp = outFp.T.reshape((len(retProf), nLats, nLons))
+
     # TODO: might not need to return coordGrid. Just added this for data validation purposes
-    return coordGrid, outFp
+    # Return (lat x lon) coord grid, (pres) pressure column, and (pres x lat x lon) data grid
+    return coordGrid, outPres, outFp
 
 
 
