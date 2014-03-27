@@ -17,6 +17,7 @@ class GribFile(File):
     def __init__(self, filename):
         File.__init__(self, filename)
         self.inFile = None
+        self.pygrib_ver = [int(x) for x in pygrib.__version__.split('.')]
 
 
     def readData(self, varName, **kwargs):
@@ -143,8 +144,16 @@ class GribFile(File):
         coordGrid = np.ndarray((numLats, numLons, 2))
         for lat in range(len(lats)):
             for lon in range(len(lons[lat])):
-                coordGrid[lat, lon, 0] = lats[lat][lon]
+
+                # HACK: deal with a bug in pygrib 1.9.6 and 1.9.8 which flips
+                #   the latitude indices in the coordinate grid.
+                if self.pygrib_ver >= [1, 9, 6]:
+                    coordGrid[lat, lon, 0] = lats[len(lats) - 1 - lat][lon]
+                else:
+                    coordGrid[lat, lon, 0] = lats[lat][lon]
+
                 coordGrid[lat, lon, 1] = lons[lat][lon]
+
 
         return coordGrid
 
@@ -164,5 +173,4 @@ class GribFile(File):
         lonIndex = int(round((lon - lons.min()) / lonIncr))
         
         return (latIndex, lonIndex)
-
 
