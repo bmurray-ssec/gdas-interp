@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 from GribFile import GribFile
 
 IN_FILE = 'data/gdas1.PGrbF00.060828.18z'
-#VAR_NAME = 'Temperature'
-VAR_NAME = 'Relative humidity'
+VAR_NAME = 'Temperature'
+#VAR_NAME = 'Relative humidity'
 EPSILON = 0.00000001
 
 def main():

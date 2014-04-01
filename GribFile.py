@@ -8,6 +8,7 @@ import numpy as np
 import pygrib
 from File import File
 
+PYGRIB_VER = [int(x) for x in pygrib.__version__.split('.')]
 
 class GribFile(File):
     """
@@ -17,7 +18,6 @@ class GribFile(File):
     def __init__(self, filename):
         File.__init__(self, filename)
         self.inFile = None
-        self.pygrib_ver = [int(x) for x in pygrib.__version__.split('.')]
 
 
     def readData(self, varName, **kwargs):
@@ -143,14 +143,10 @@ class GribFile(File):
         coordGrid = np.ndarray((numLats, numLons, 2))
         for lat in range(len(lats)):
             for lon in range(len(lons[lat])):
-
-                # HACK: deal with a bug in pygrib 1.9.6 and 1.9.8 which flips
-                #   the latitude indices in the coordinate grid.
-                if self.pygrib_ver >= [1, 9, 6]:
-                    coordGrid[lat, lon, 0] = lats[len(lats) - 1 - lat][lon]
-                else:
-                    coordGrid[lat, lon, 0] = lats[lat][lon]
-
+                # Moved handling of pygrib version hack to _getIndex. Since the
+                # data matches up with the grid ordering given in lats and lons,
+                # we have to maintain that ordering in our created grid.
+                coordGrid[lat, lon, 0] = lats[lat][lon]
                 coordGrid[lat, lon, 1] = lons[lat][lon]
 
 
@@ -164,12 +160,18 @@ class GribFile(File):
         latRange = lats.max() - lats.min() + 1
         lonRange = lons.max() - lons.min() + 1
 
-        latIncr = latRange / float(numLats)
-        lonIncr = lonRange / float(numLons)
+        latRes = latRange / float(numLats)
+        lonRes = lonRange / float(numLons)
             
-        # make sure the index is an integer
-        latIndex = int(round((lat - lats.min()) / latIncr))
-        lonIndex = int(round((lon - lons.min()) / lonIncr))
+        # Make sure the index is an integer.
+        # HACK: deal with a change in pygrib 1.9.6 and 1.9.8 which flips
+        #   the latitude indices in the coordinate grid. Sometime in the 
+        #   future, should probably figure out a less hacky way to do this.
+        if PYGRIB_VER >= [1, 9, 6]:
+            latIndex = int(round((lats.max() - lat) / latRes))
+        else:
+            latIndex = int(round((lat - lats.min()) / latRes))
+        lonIndex = int(round((lon - lons.min()) / lonRes))
 
         return (latIndex, lonIndex)
 

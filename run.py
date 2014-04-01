@@ -91,8 +91,8 @@ def main():
 
     #lat = 19.949
     #lon = -62.717
-    lat = 0
-    lon = 0
+    lat = -89.0
+    lon = 10.0
 
     #output = g.vert_interp(VAR_NAME, lat, lon, pressure, tempProf=tempProf, rhProf=rhProf)
 

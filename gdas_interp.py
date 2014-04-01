@@ -904,24 +904,17 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
     # process columns in parallel
     procList = []
     if rhProf is None:
-        for i in range(NUM_PROCS): 
-            p = Process(target=_process_columns, args=(varName, tempFile, rhFile,
-                                                       outFile, len(tempProf[0]),
-                                                       None, len(retProf), 
-                                                       i * columnsPerProc, 
-                                                       nLats, nLons, columnsPerProc))
-            procList.append(p)
-            p.start()
+        rhProfLen = None
     else:
-        # process columns in parallel
-        for i in range(NUM_PROCS): 
-            p = Process(target=_process_columns, args=(varName, tempFile, rhFile,
-                                                       outFile, len(tempProf[0]),
-                                                       len(rhProf[0]), len(retProf), 
-                                                       i * columnsPerProc, 
-                                                       nLats, nLons, columnsPerProc))
-            procList.append(p)
-            p.start()
+        rhProfLen = len(rhProf[0])
+    for i in range(NUM_PROCS): 
+        p = Process(target=_process_columns, args=(varName, tempFile, rhFile,
+                                                   outFile, len(tempProf[0]),
+                                                   rhProfLen, len(retProf), 
+                                                   i * columnsPerProc, 
+                                                   nLats, nLons, columnsPerProc))
+        procList.append(p)
+        p.start()
 
     # wait for running child processes to complete
     for p in procList:
@@ -930,21 +923,13 @@ def vert_interp_grid(varName, pressure=None, filename=None, tempProf=None, rhPro
             print 'Error: process %d should be dead here' % p.pid
 
     # get the output profile from our mem-mapped file
-    outFp = np.memmap(outFile, dtype='float64', mode='r', shape=(nLats * nLons, len(retProf)))
+    dataGrid = np.memmap(outFile, dtype='float64', mode='r', shape=(nLats * nLons, len(retProf)))
 
     # remove tmpDir when done
     shutil.rmtree(tmpDir)
 
-    outFp = outFp.T.reshape((len(retProf), nLats, nLons))
+    dataGrid = dataGrid.T.reshape((len(retProf), nLats, nLons))
 
     # TODO: might not need to return coordGrid. Just added this for data validation purposes
     # Return (lat x lon) coord grid, (pres) pressure column, and (pres x lat x lon) data grid
-    return coordGrid, outPres, outFp
-
-
-
-
-
-
-
-
+    return coordGrid, outPres, dataGrid
